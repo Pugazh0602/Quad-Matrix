@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import usersRoutes from "./backend/routes/users.js";
 import sessionsRoutes from "./backend/routes/sessions.js";
+import allSessionsRoutes from "./backend/routes/allSessions.js";
 import logsRoutes from "./backend/routes/logs.js";
 import adminRoutes from "./backend/routes/admin.js";
 import employeesRoutes from "./backend/routes/employees.js";
@@ -14,8 +15,8 @@ import { generateLogId } from "./backend/utils/security.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env. MONGODB_URI || "mongodb://localhost:27017/QuadMatrixLog";
+const PORT = process. env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/QuadMatrixLog";
 
 // Middleware
 const allowedOrigins = [
@@ -98,13 +99,14 @@ app.get("/api/health", (req, res) => {
     status: "ok",
     timestamp: new Date(),
     database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    uptime: process. uptime(),
+    uptime: process.uptime(),
   });
 });
 
 // Routes
 app.use("/api/admin", adminRoutes);
 app. use("/api/employees", employeesRoutes);
+app.use("/api/all-sessions", allSessionsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/logs", logsRoutes);
@@ -112,7 +114,7 @@ app.use("/api/logs", logsRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err);
-  res.status(err.status || 500).json({
+  res. status(err.status || 500).json({
     success: false,
     message: err.message || "Internal server error",
     error: process.env.NODE_ENV === "development" ? err : undefined,
@@ -141,12 +143,11 @@ const startServer = async () => {
     console.log(`║ Database: ${MONGODB_URI. split("/"). pop(). padEnd(46)} ║`);
     console. log("║                                                        ║");
     console.log("║ API Endpoints:                                         ║");
-    console.log("║  • POST   /api/admin/login - Admin login               ║");
-    console.log("║  • GET    /api/employees - Get all employees           ║");
-    console.log("║  • GET    /api/employees/:id - Get employee            ║");
-    console.log("║  • GET    /api/employees/:id/sessions - Sessions       ║");
-    console. log("║  • GET    /api/employees/:id/stats - Employee stats    ║");
-    console.log("║  • GET    /api/employees/search/query - Search         ║");
+    console.log("║  • GET    /api/all-sessions - All sessions             ║");
+    console.log("║  • GET    /api/all-sessions/stats/summary - Stats      ║");
+    console. log("║  • GET    /api/all-sessions/active - Active sessions   ║");
+    console.log("║  • GET    /api/all-sessions/completed - Completed      ║");
+    console.log("║  • GET    /api/employees/:id/sessions - User sessions  ║");
     console.log("╚════════════════════════════════════════════════════════╝\n");
   });
 };

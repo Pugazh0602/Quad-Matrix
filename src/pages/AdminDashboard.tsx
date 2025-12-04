@@ -464,11 +464,12 @@ export const AdminDashboard: React.FC = () => {
                 disabled={employeesLoading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200 flex items-center justify-center"
               >
+                    
                 {employeesLoading ? (
                   <>
                     <svg
                       className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                      xmlns="http://www.w3. org/2000/svg"
+                      xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
@@ -501,6 +502,11 @@ export const AdminDashboard: React.FC = () => {
               <button className="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
                 System Settings
               </button>
+              <button
+                    onClick={() => navigate("/admin/sessions")}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-200">
+                    View All Sessions
+                    </button>
             </div>
           </div>
         </div>
@@ -771,7 +777,7 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-
+           
               <div className="px-6 py-4 bg-gray-50 border-t flex justify-end sticky bottom-0">
                 <button
                   onClick={() => setShowEmployeeModal(false)}

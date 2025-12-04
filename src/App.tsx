@@ -12,6 +12,7 @@ import EmployeeHome from "./pages/EmployeeHome";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminSessions from "./pages/AdminSessions";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/sessions" element={<AdminSessions />} />
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
 
             {/* 404 Route - MUST BE LAST */}
