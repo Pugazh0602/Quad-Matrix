@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import EmployeeHome from "./pages/EmployeeHome";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -21,8 +23,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Main Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            
+            {/* Dashboard Routes */}
             <Route
               path="/dashboard"
               element={
@@ -31,6 +36,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            
+            {/* Employee Routes */}
             <Route
               path="/employee"
               element={
@@ -39,7 +46,13 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+
+            {/* 404 Route - MUST BE LAST */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

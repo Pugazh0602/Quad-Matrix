@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import usersRoutes from "./backend/routes/users.js";
 import sessionsRoutes from "./backend/routes/sessions.js";
 import logsRoutes from "./backend/routes/logs.js";
+import adminRoutes from "./backend/routes/admin.js";
+import employeesRoutes from "./backend/routes/employees.js";
 import StartupLog from "./backend/models/StartupLog.js";
 import { generateLogId } from "./backend/utils/security.js";
 
@@ -13,10 +15,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/QuadMatrixLog";
+const MONGODB_URI = process.env. MONGODB_URI || "mongodb://localhost:27017/QuadMatrixLog";
 
 // Middleware
-// Allow CORS from network IPs and localhost
 const allowedOrigins = [
   process.env.CORS_ORIGIN || "http://localhost:8080",
   "http://localhost:5173",
@@ -29,14 +30,12 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl requests)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     
-    // Check if origin is from the allowed IP range (198.168.x.x)
     const ipPattern = /^https?:\/\/198\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/;
     if (ipPattern.test(origin)) {
       return callback(null, true);
@@ -56,7 +55,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// MongoDB Connection with error handling
+// MongoDB Connection
 const connectDB = async () => {
   try {
     await mongoose.connect(MONGODB_URI, {
@@ -67,7 +66,6 @@ const connectDB = async () => {
     
     console.log("✓ Connected to MongoDB - QuadMatrixLog database");
     
-    // Log startup
     const startupDuration = process.uptime();
     await StartupLog.create({
       startupId: generateLogId("startup"),
@@ -88,7 +86,7 @@ const connectDB = async () => {
     
     console.log("✓ System startup logged to database");
   } catch (error) {
-    console.error("✗ MongoDB connection error:", error.message);
+    console.error("✗ MongoDB connection error:", error. message);
     console.error("  Ensure MongoDB is running at:", MONGODB_URI);
     process.exit(1);
   }
@@ -100,15 +98,15 @@ app.get("/api/health", (req, res) => {
     status: "ok",
     timestamp: new Date(),
     database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    uptime: process.uptime(),
+    uptime: process. uptime(),
   });
 });
 
-// Tracking Routes
+// Routes
+app.use("/api/admin", adminRoutes);
+app. use("/api/employees", employeesRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/sessions", sessionsRoutes);
-
-// Logs Routes
 app.use("/api/logs", logsRoutes);
 
 // Error handling middleware
@@ -138,19 +136,17 @@ const startServer = async () => {
     console.log("\n╔════════════════════════════════════════════════════════╗");
     console.log("║           QuadMatrix Login-Logout Tracker              ║");
     console.log("╠════════════════════════════════════════════════════════╣");
-    console.log(`║ Server running on port ${PORT.toString().padEnd(45)} ║`);
-    console.log(`║ Listening on all network interfaces (0.0.0.0)          ║`);
-    console.log(`║ Access via: 198.168.1.101:${PORT} | 198.168.1.102:${PORT} | 198.168.1.103:${PORT} ║`);
-    console.log(`║ Database: ${MONGODB_URI.split("/").pop().padEnd(46)} ║`);
-    console.log(`║ Environment: ${(process.env.NODE_ENV || "development").padEnd(42)} ║`);
-    console.log("║                                                        ║");
+    console.log(`║ Server running on port ${PORT. toString(). padEnd(45)} ║`);
+    console. log(`║ Listening on all network interfaces (0.0.0.0)          ║`);
+    console.log(`║ Database: ${MONGODB_URI. split("/"). pop(). padEnd(46)} ║`);
+    console. log("║                                                        ║");
     console.log("║ API Endpoints:                                         ║");
-    console.log("║  • POST   /api/sessions - Create work session          ║");
-    console.log("║  • GET    /api/sessions - List sessions                ║");
-    console.log("║  • PUT    /api/sessions/:id - Update session           ║");
-    console.log("║  • GET    /api/logs/login - View login logs           ║");
-    console.log("║  • GET    /api/logs/security - View security logs     ║");
-    console.log("║  • GET    /api/health - Health check                  ║");
+    console.log("║  • POST   /api/admin/login - Admin login               ║");
+    console.log("║  • GET    /api/employees - Get all employees           ║");
+    console.log("║  • GET    /api/employees/:id - Get employee            ║");
+    console.log("║  • GET    /api/employees/:id/sessions - Sessions       ║");
+    console. log("║  • GET    /api/employees/:id/stats - Employee stats    ║");
+    console.log("║  • GET    /api/employees/search/query - Search         ║");
     console.log("╚════════════════════════════════════════════════════════╝\n");
   });
 };

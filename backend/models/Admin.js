@@ -4,37 +4,57 @@ const adminSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
-      required: true,
       unique: true,
+      required: true,
     },
     username: {
       type: String,
+      unique: true,
       required: true,
+      trim: true,
+      minlength: 3,
     },
     email: {
       type: String,
-      required: true,
       unique: true,
+      required: true,
       lowercase: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
     password: {
       type: String,
       required: true,
+      minlength: 8,
     },
     role: {
       type: String,
-      enum: ["super_admin", "admin", "security_officer"],
+      enum: ["super_admin", "admin", "moderator"],
       default: "admin",
     },
-    permissions: [String],
+    permissions: {
+      type: [String],
+      default: ["read", "write"],
+    },
     isActive: {
       type: Boolean,
       default: true,
     },
-    lastLogin: Date,
-    createdBy: String,
+    lastLogin: {
+      type: Date,
+      default: null,
+    },
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    isLocked: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export default mongoose.model("admin", adminSchema);
+export default mongoose.model("Admin", adminSchema);
