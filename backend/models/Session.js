@@ -52,6 +52,10 @@ const sessionSchema = new mongoose.Schema(
       type: String,
       default: "Unknown",
     },
+    workDone: {
+    type: String,
+    default: ""
+},
   },
   {
     timestamps: true,

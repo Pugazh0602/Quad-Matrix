@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { format, parseISO, differenceInSeconds } from "date-fns";
+import { Textarea } from "@/components/ui/textarea"; 
+// Removed Input import as it's not used in this specific file
+
 
 interface SessionRow {
   _id: string;
@@ -10,6 +13,7 @@ interface SessionRow {
   loginTime: string;
   logoutTime: string | null;
   status: string;
+  workDone: string; // Corrected interface
 }
 
 const EmployeeHome: React.FC = () => {
@@ -17,6 +21,9 @@ const EmployeeHome: React.FC = () => {
   const navigate = useNavigate();
   const [rows, setRows] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentWorkDone, setCurrentWorkDone] = useState(""); 
+  const [isSavingWork, setIsSavingWork] = useState(false); 
+
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -65,7 +72,35 @@ const EmployeeHome: React.FC = () => {
     }
   };
 
+  // Function to save the "work done" description to the backend
+  const saveWorkDone = async () => { 
+    if (!session?.sessionId || !currentWorkDone.trim()) return;
+
+    setIsSavingWork(true);
+    try {
+      // We will create a new PUT endpoint on the backend
+      const res = await fetch(`/api/sessions/${session.sessionId}/work`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ workDone: currentWorkDone }),
+      });
+
+      if (res.ok) {
+        console.log("Work description saved successfully.");
+      } else {
+        console.error("Failed to save work description.");
+      }
+    } catch (error) {
+      console.error("Error saving work description:", error);
+    } finally {
+      setIsSavingWork(false);
+    }
+  };
+
   const handleLogout = async () => {
+    await saveWorkDone();
     await logout();
     navigate("/login");
   };
@@ -85,8 +120,26 @@ const EmployeeHome: React.FC = () => {
           </div>
         </div>
       </div>
-
+    
       <div className="container mx-auto px-4 py-8">
+        
+        {/* Input box for current work done */}
+        {session && (
+            <div className="bg-card rounded-lg border p-4 mb-8">
+                <h2 className="text-xl font-semibold mb-3">Log Your Work for This Session</h2>
+                <Textarea 
+                    placeholder="Describe the tasks you completed..."
+                    value={currentWorkDone}
+                    onChange={(e) => setCurrentWorkDone(e.target.value)}
+                    rows={4}
+                    className="mb-3"
+                />
+                <Button onClick={saveWorkDone} disabled={isSavingWork || !currentWorkDone.trim()}>
+                    {isSavingWork ? "Saving..." : "Save Work Done"}
+                </Button>
+            </div>
+        )}
+
         <div className="bg-card rounded-lg border p-4">
           <h2 className="text-xl font-semibold mb-4">Previous Logins</h2>
           {loading ? (
@@ -100,6 +153,7 @@ const EmployeeHome: React.FC = () => {
                     <th className="text-left p-2">Date</th>
                     <th className="text-left p-2">Work Hours</th>
                     <th className="text-left p-2">Duration</th>
+                    <th className="text-left p-2">Work Summary</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -109,11 +163,12 @@ const EmployeeHome: React.FC = () => {
                       <td className="p-2">{format(parseISO(r.loginTime), "yyyy-MM-dd")}</td>
                       <td className="p-2">{formatRange(r.loginTime, r.logoutTime)}</td>
                       <td className="p-2">{calculateDuration(r.loginTime, r.logoutTime)}</td>
+                      <td className="p-2 text-sm max-w-xs truncate">{r.workDone || "N/A"}</td>
                     </tr>
                   ))}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                      <td colSpan={5} className="p-4 text-center text-muted-foreground">
                         No sessions found.
                       </td>
                     </tr>

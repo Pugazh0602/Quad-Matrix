@@ -18,6 +18,7 @@ interface Session {
   deviceInfo: string;
   status: string;
   createdAt: string;
+  workDone: string;
 }
 
 interface Stats {
@@ -48,14 +49,14 @@ export const AdminSessions: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
-    if (! token) {
+    if (!token) {
       navigate("/admin/login", { replace: true });
       return;
     }
 
     fetchStats();
     fetchSessions(1);
-  }, [navigate, filter]);
+  }, [filter]);
 
   const fetchStats = async () => {
     try {
@@ -81,15 +82,13 @@ export const AdminSessions: React.FC = () => {
   const fetchSessions = async (page: number) => {
     setLoading(true);
     try {
-      const token = localStorage. getItem("adminToken");
-      let url = `http://localhost:5000/api/all-sessions`;
+      const token = localStorage.getItem("adminToken");
+      let url = `http://localhost:5000/api/all-sessions?page=${page}&limit=50`;
 
       if (filter === "active") {
-        url = `http://localhost:5000/api/all-sessions/active`;
+        url = `http://localhost:5000/api/all-sessions/active?page=${page}&limit=50`;
       } else if (filter === "completed") {
-        url = `http://localhost:5000/api/all-sessions/completed? page=${page}&limit=50`;
-      } else {
-        url = `http://localhost:5000/api/all-sessions? page=${page}&limit=50`;
+        url = `http://localhost:5000/api/all-sessions/completed?page=${page}&limit=50`;
       }
 
       const response = await axios.get(url, {
@@ -101,11 +100,11 @@ export const AdminSessions: React.FC = () => {
 
       if (response.data.success) {
         setSessions(response.data.data || []);
-        setPagination(response.data.pagination);
+        setPagination(response.data.pagination || null);
         setCurrentPage(page);
         setError("");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching sessions:", err);
       setError("Failed to fetch sessions");
     } finally {
@@ -117,7 +116,7 @@ export const AdminSessions: React.FC = () => {
     if (!dateString) return "-";
     try {
       return format(parseISO(dateString), "yyyy-MM-dd");
-    } catch (e) {
+    } catch {
       return "-";
     }
   };
@@ -125,10 +124,10 @@ export const AdminSessions: React.FC = () => {
   const formatRange = (startTime: string | null, endTime: string | null) => {
     if (!startTime) return "-";
     try {
-      const start = format(parseISO(startTime), "HH:mm a");
-      const end = endTime ? format(parseISO(endTime), "HH:mm a") : "Active";
+      const start = format(parseISO(startTime), "hh:mm a");
+      const end = endTime ? format(parseISO(endTime), "hh:mm a") : "Active";
       return `${start} to ${end}`;
-    } catch (e) {
+    } catch {
       return "-";
     }
   };
@@ -136,25 +135,25 @@ export const AdminSessions: React.FC = () => {
   const calculateDuration = (startTime: string | null, endTime: string | null) => {
     if (!startTime || !endTime) return "Active";
     try {
-      const start = new Date(startTime). getTime();
+      const start = new Date(startTime).getTime();
       const end = new Date(endTime).getTime();
       const durationMs = end - start;
       if (durationMs < 0) return "Invalid";
-      const hours = Math. floor(durationMs / (1000 * 60 * 60));
+      const hours = Math.floor(durationMs / (1000 * 60 * 60));
       const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((durationMs % (1000 * 60)) / 1000);
       return `${hours}h ${minutes}m ${seconds}s`;
-    } catch (e) {
+    } catch {
       return "Invalid";
     }
   };
 
   const filteredSessions = sessions.filter((session) => {
-    if (! session.user) return true;
+    if (!session.user) return true;
 
-    const userName = session.user?. name?. toLowerCase() || "";
-    const userEmail = session.user?.email?. toLowerCase() || "";
-    const userUsername = session.user?.username?. toLowerCase() || "";
+    const userName = session.user?.name?.toLowerCase() || "";
+    const userEmail = session.user?.email?.toLowerCase() || "";
+    const userUsername = session.user?.username?.toLowerCase() || "";
     const search = searchTerm.toLowerCase();
 
     return (
@@ -171,9 +170,7 @@ export const AdminSessions: React.FC = () => {
         "http://localhost:5000/api/admin/logout",
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         }
       );
@@ -218,45 +215,29 @@ export const AdminSessions: React.FC = () => {
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Sessions</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalSessions}</p>
-                </div>
-                <div className="text-4xl">📊</div>
-              </div>
+              <p className="text-gray-500 text-sm">Total Sessions</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalSessions}</p>
             </div>
 
             <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Active Now</p>
-                  <p className="text-3xl font-bold text-green-600">{stats.activeSessions}</p>
-                </div>
-                <div className="text-4xl">✓</div>
-              </div>
+              <p className="text-gray-500 text-sm">Active Now</p>
+              <p className="text-3xl font-bold text-green-600">{stats.activeSessions}</p>
             </div>
 
             <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Employees</p>
-                  <p className="text-3xl font-bold text-indigo-600">{stats.uniqueUsers}</p>
-                </div>
-                <div className="text-4xl">👥</div>
-              </div>
+              <p className="text-gray-500 text-sm">Total Employees</p>
+              <p className="text-3xl font-bold text-indigo-600">{stats.uniqueUsers}</p>
             </div>
           </div>
         )}
 
-        {/* Filters and Search */}
+        {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Filter Tabs */}
             <div className="md:col-span-3 flex gap-2 flex-wrap">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-lg font-medium ${
                   filter === "all"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -264,9 +245,10 @@ export const AdminSessions: React.FC = () => {
               >
                 All Sessions
               </button>
+
               <button
                 onClick={() => setFilter("active")}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-lg font-medium ${
                   filter === "active"
                     ? "bg-green-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -274,9 +256,10 @@ export const AdminSessions: React.FC = () => {
               >
                 Active Now
               </button>
+
               <button
                 onClick={() => setFilter("completed")}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-lg font-medium ${
                   filter === "completed"
                     ? "bg-gray-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -287,15 +270,13 @@ export const AdminSessions: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div>
-              <input
-                type="text"
-                placeholder="Search by name, email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Search by name, email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
 
@@ -309,77 +290,88 @@ export const AdminSessions: React.FC = () => {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="text-center">
-                <svg
-                  className="animate-spin h-12 w-12 text-blue-600 mx-auto"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                <p className="mt-4 text-gray-600">Loading sessions...</p>
-              </div>
+              <svg
+                className="animate-spin h-12 w-12 text-blue-600 mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <p className="mt-4 text-gray-600">Loading sessions...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full table-auto">
                 <thead>
                   <tr>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
+                    <th className="p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
                       Employee
                     </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
+                    <th className="p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
                       Date
                     </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
+                    <th className="p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
                       Work Hours
                     </th>
-                    <th className="text-left p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
+                    <th className="p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
                       Duration
+                    </th>
+                    <th className="p-3 bg-gray-50 font-semibold text-gray-700 text-sm">
+                      Work Summary
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {filteredSessions.map((session) => (
-                    <tr key={session._id} className="border-t hover:bg-gray-50 transition">
+                    <tr key={session._id} className="border-t hover:bg-gray-50">
                       <td className="p-3">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {session.user?.name || "Unknown"}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {session.user?.email || "N/A"}
-                          </p>
-                        </div>
+                        <p className="font-medium text-gray-900">
+                          {session.user?.name || "Unknown"}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {session.user?.email || "N/A"}
+                        </p>
                       </td>
-                      <td className="p-3 text-gray-700 text-sm">
+
+                      <td className="p-3 text-sm text-gray-700">
                         {formatDate(session.startTime)}
                       </td>
-                      <td className="p-3 text-gray-700 text-sm">
+
+                      <td className="p-3 text-sm text-gray-700">
                         {formatRange(session.startTime, session.endTime)}
                       </td>
-                      <td className="p-3 font-medium text-gray-900 text-sm">
+
+                      <td className="p-3 text-sm font-medium text-gray-900">
                         {calculateDuration(session.startTime, session.endTime)}
+                      </td>
+
+                      <td className="p-3 text-sm max-w-xs truncate">
+                        {session.workDone || "N/A"}
                       </td>
                     </tr>
                   ))}
+
                   {filteredSessions.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="p-4 text-center text-gray-500">
-                        No sessions found. 
+                      <td
+                        colSpan={5}
+                        className="p-4 text-center text-gray-500"
+                      >
+                        No sessions found.
                       </td>
                     </tr>
                   )}
@@ -395,40 +387,29 @@ export const AdminSessions: React.FC = () => {
             <button
               onClick={() => fetchSessions(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg disabled:opacity-50"
             >
               Previous
             </button>
 
-            {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
-              let pageNum = i + 1;
-              if (pagination.pages > 5) {
-                if (currentPage > 3) {
-                  pageNum = currentPage - 2 + i;
-                }
-                if (pageNum > pagination.pages) {
-                  pageNum = pagination.pages - (4 - i);
-                }
-              }
-              return pageNum;
-            }). map((page) => (
+            {Array.from({ length: pagination.pages }, (_, i) => (
               <button
-                key={page}
-                onClick={() => fetchSessions(page)}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  currentPage === page
+                key={i + 1}
+                onClick={() => fetchSessions(i + 1)}
+                className={`px-4 py-2 rounded-lg ${
+                  currentPage === i + 1
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    : "bg-gray-200 hover:bg-gray-300"
                 }`}
               >
-                {page}
+                {i + 1}
               </button>
             ))}
 
             <button
               onClick={() => fetchSessions(currentPage + 1)}
               disabled={currentPage === pagination.pages}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg disabled:opacity-50"
             >
               Next
             </button>
