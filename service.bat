@@ -10,6 +10,6 @@ start "" /B cmd /c "npm run dev"
 
 REM Start backend (silent)
 echo Starting backend...
-start "" /B cmd /c "npm run server:dev"
+@REM start "" /B cmd /c "npm run server:dev"
 
 exit /b 0
