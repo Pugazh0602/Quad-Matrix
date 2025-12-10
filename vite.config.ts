@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: false,
     proxy: {
       "/api": {
         target: "http://localhost:5000",
@@ -16,6 +17,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
